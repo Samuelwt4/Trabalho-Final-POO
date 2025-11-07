@@ -1,3 +1,5 @@
+package Usuários_e_Perfis;
+
 public abstract class Usuario {
     protected String nome;
     protected String email;

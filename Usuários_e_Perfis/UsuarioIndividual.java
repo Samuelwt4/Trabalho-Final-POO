@@ -1,3 +1,5 @@
+package Usuários_e_Perfis;
+
 public class UsuarioIndividual extends Usuario {
     public UsuarioIndividual(String nome, String email, int Id) {
         super(nome, email, Id);

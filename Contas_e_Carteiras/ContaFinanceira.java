@@ -1,3 +1,5 @@
+package Contas_e_Carteiras;
+
 public abstract class ContaFinanceira {
     protected String nome;
     protected double saldo;

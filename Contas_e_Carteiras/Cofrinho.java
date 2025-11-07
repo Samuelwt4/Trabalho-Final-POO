@@ -1,3 +1,5 @@
+package Contas_e_Carteiras;
+
 public class Cofrinho extends ContaFinanceira {
     public Cofrinho(double saldoInicial) {
         super("Cofrinho", saldoInicial);
