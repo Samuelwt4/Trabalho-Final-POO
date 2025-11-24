@@ -5,7 +5,7 @@ public abstract class ContaFinanceira {
     private int id;
     private String nome;
     private Usuario dono;
-    private double saldo;
+    protected double saldo;
 
     public ContaFinanceira(int id, String nome, Usuario dono, double saldoInicial){
         this.id = id;

@@ -1,4 +1,4 @@
-package Algoritimos;
+package Algoritmos;
 import MetasOrcamentos.MetaCategoria;
 
 public class AlgoritmosFinanceiros {
