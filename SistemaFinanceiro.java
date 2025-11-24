@@ -11,7 +11,7 @@ import ContasCarteiras.CarteiraInvestimento;
 import ContasCarteiras.CofrinhoVirtual;
 import Lancamentos.Lancamento;
 import MetasOrcamentos.MetaCategoria;
-import Algoritmos.AlgoritmosFinanceiros;
+import Algoritmos.AlgoritmosFinanceiros; 
 
 public class SistemaFinanceiro {
 
@@ -36,6 +36,7 @@ public class SistemaFinanceiro {
             System.out.println("3 - Lançamentos");
             System.out.println("4 - Metas e Orçamentos");
             System.out.println("5 - Algoritmos Inteligentes");
+            System.out.println("6 - Relatórios");
             System.out.println("0 - Sair");
             System.out.print("Opção: ");
 
@@ -56,6 +57,8 @@ public class SistemaFinanceiro {
                 menuMetas();
             } else if (opcao == 5) {
                 menuAlgoritmos();
+            } else if (opcao == 6) {
+                menuRelatorios();
             } else if (opcao == 0) {
                 System.out.println("Saindo do sistema...");
             } else {
@@ -296,8 +299,10 @@ public class SistemaFinanceiro {
 
         while (opcao != 0) {
             System.out.println("\n=== MENU DE LANÇAMENTOS ===");
-            System.out.println("1 - Registrar lançamento");
+            System.out.println("1 - Registrar lançamento simples");
             System.out.println("2 - Listar lançamentos");
+            System.out.println("3 - Estornar lançamento");
+            System.out.println("4 - Registrar despesa parcelada");
             System.out.println("0 - Voltar");
             System.out.print("Opção: ");
 
@@ -312,6 +317,10 @@ public class SistemaFinanceiro {
                 registrarLancamento();
             } else if (opcao == 2) {
                 listarLancamentos();
+            } else if (opcao == 3) {
+                estornarLancamento();
+            } else if (opcao == 4) {
+                registrarDespesaParcelada();
             } else if (opcao == 0) {
                 System.out.println("Voltando ao menu principal...");
             } else {
@@ -418,6 +427,158 @@ public class SistemaFinanceiro {
             l.exibir();
             i = i + 1;
         }
+    }
+
+    private Lancamento buscarLancamentoPorId(int id) {
+        int i = 0;
+        while (i < lancamentos.size()) {
+            Lancamento l = lancamentos.get(i);
+            if (l.getId() == id) {
+                return l;
+            }
+            i = i + 1;
+        }
+        return null;
+    }
+
+    private void estornarLancamento() {
+        if (lancamentos.size() == 0) {
+            System.out.println("Nenhum lançamento registrado para estornar.");
+            return;
+        }
+
+        System.out.println("\n=== Estorno de Lançamento ===");
+        System.out.println("Lançamentos existentes:");
+
+        int i = 0;
+        while (i < lancamentos.size()) {
+            Lancamento l = lancamentos.get(i);
+            System.out.println("ID: " + l.getId() +
+                    " | Tipo: " + l.getTipo() +
+                    " | Valor: R$ " + l.getValor());
+            i = i + 1;
+        }
+
+        System.out.print("Informe o ID do lançamento que deseja estornar: ");
+        String linha = entrada.nextLine();
+        if (linha.length() == 0) {
+            System.out.println("ID inválido.");
+            return;
+        }
+
+        int idLanc = Integer.parseInt(linha);
+        Lancamento lanc = buscarLancamentoPorId(idLanc);
+
+        if (lanc == null) {
+            System.out.println("Lançamento não encontrado.");
+            return;
+        }
+
+        lanc.estornar();
+    }
+
+    private void registrarDespesaParcelada() {
+        if (contas.size() == 0) {
+            System.out.println("Você precisa cadastrar contas antes de registrar lançamentos.");
+            return;
+        }
+
+        System.out.println("\n=== Registro de Despesa Parcelada ===");
+
+        // Conta que vai pagar a despesa
+        listarContas();
+        System.out.print("ID da conta de origem (que vai pagar as parcelas): ");
+        int idContaOrigem = Integer.parseInt(entrada.nextLine());
+        ContaFinanceira contaOrigem = buscarContaPorId(idContaOrigem);
+
+        if (contaOrigem == null) {
+            System.out.println("Conta de origem não encontrada.");
+            return;
+        }
+
+        System.out.print("Valor TOTAL da despesa (somando todas as parcelas): ");
+        double valorTotal = Double.parseDouble(entrada.nextLine());
+
+        System.out.print("Quantidade de parcelas: ");
+        int qtdParcelas = Integer.parseInt(entrada.nextLine());
+
+        if (qtdParcelas <= 0) {
+            System.out.println("Quantidade de parcelas inválida.");
+            return;
+        }
+
+        double valorParcela = valorTotal / qtdParcelas;
+
+        System.out.print("Categoria: ");
+        String categoria = entrada.nextLine();
+
+        System.out.print("Subcategoria: ");
+        String subcategoria = entrada.nextLine();
+
+        System.out.print("Data base (ex: 24/11/2025): ");
+        String dataBase = entrada.nextLine();
+
+        System.out.println("Recorrência (0 = nenhuma, 1 = mensal, 2 = anual): ");
+        int recorrencia = Integer.parseInt(entrada.nextLine());
+
+        // Pagador / Beneficiário
+        listarUsuarios();
+        System.out.print("ID do pagador (0 para nenhum): ");
+        int idPagador = Integer.parseInt(entrada.nextLine());
+        Usuario pagador = null;
+        if (idPagador != 0) {
+            pagador = buscarUsuarioPorId(idPagador);
+        }
+
+        System.out.print("ID do beneficiário (0 para nenhum): ");
+        int idBeneficiario = Integer.parseInt(entrada.nextLine());
+        Usuario beneficiario = null;
+        if (idBeneficiario != 0) {
+            beneficiario = buscarUsuarioPorId(idBeneficiario);
+        }
+
+        System.out.print("Descrição do anexo (simulado, ex: nota.jpg): ");
+        String anexo = entrada.nextLine();
+
+        // Geralmente não há conta destino específica para despesa parcelada
+        ContaFinanceira contaDestino = null;
+
+        int parcela = 1;
+        while (parcela <= qtdParcelas) {
+            int novoId = lancamentos.size() + 1;
+
+            // Só para visualização, colocamos a parcela no texto da data
+            String dataParcela = dataBase + " (parcela " + parcela + "/" + qtdParcelas + ")";
+
+            Lancamento lanc = new Lancamento(
+                    novoId,
+                    2, // tipo 2 = DESPESA
+                    valorParcela,
+                    categoria,
+                    subcategoria,
+                    dataParcela,
+                    recorrencia,
+                    pagador,
+                    beneficiario,
+                    anexo,
+                    contaOrigem,
+                    contaDestino
+            );
+
+            lanc.setNumeroParcela(parcela);
+            lanc.setTotalParcelas(qtdParcelas);
+
+            // Aplica a parcela na conta (vai debitar)
+            lanc.aplicar();
+
+            // Guarda o lançamento na lista
+            lancamentos.add(lanc);
+
+            parcela = parcela + 1;
+        }
+
+        System.out.println("Despesa parcelada registrada com " + qtdParcelas +
+                " parcelas de R$ " + valorParcela);
     }
 
     // =========================
@@ -696,5 +857,203 @@ public class SistemaFinanceiro {
         double mult = Double.parseDouble(entrada.nextLine());
 
         AlgoritmosFinanceiros.detectarGastosForaDoPadrao(gastos, mult);
+    }
+
+    // =========================
+    // MENU DE RELATÓRIOS
+    // =========================
+    private void menuRelatorios() {
+        int opcao = -1;
+
+        while (opcao != 0) {
+            System.out.println("\n=== MENU DE RELATÓRIOS ===");
+            System.out.println("1 - Gastos por categoria (despesas)");
+            System.out.println("2 - Ranking de maiores despesas");
+            System.out.println("3 - Resumo por usuário/grupo");
+            System.out.println("0 - Voltar");
+            System.out.print("Opção: ");
+
+            String linha = entrada.nextLine();
+            if (linha.length() == 0) {
+                opcao = -1;
+            } else {
+                opcao = Integer.parseInt(linha);
+            }
+
+            if (opcao == 1) {
+                relatorioGastosPorCategoria();
+            } else if (opcao == 2) {
+                relatorioRankingDespesas();
+            } else if (opcao == 3) {
+                relatorioResumoPorUsuario();
+            } else if (opcao == 0) {
+                System.out.println("Voltando ao menu principal...");
+            } else {
+                System.out.println("Opção inválida!");
+            }
+        }
+    }
+
+    // 1) Gastos por categoria (somando despesas)
+    private void relatorioGastosPorCategoria() {
+        System.out.println("\n=== Relatório: Gastos por Categoria (somente DESPESAS) ===");
+
+        if (lancamentos.size() == 0) {
+            System.out.println("Nenhum lançamento registrado.");
+            return;
+        }
+
+        ArrayList<String> categorias = new ArrayList<String>();
+        ArrayList<Double> totais = new ArrayList<Double>();
+
+        int i = 0;
+        while (i < lancamentos.size()) {
+            Lancamento l = lancamentos.get(i);
+
+            if (l.getTipo() == 2) { // 2 = despesa
+                String cat = l.getCategoria();
+                double valor = l.getValor();
+
+                int pos = -1;
+                int j = 0;
+                while (j < categorias.size()) {
+                    // aqui usamos equals apenas para comparar textos de categoria
+                    if (categorias.get(j).equals(cat)) {
+                        pos = j;
+                        j = categorias.size(); // para sair do while
+                    } else {
+                        j = j + 1;
+                    }
+                }
+
+                if (pos == -1) {
+                    categorias.add(cat);
+                    totais.add(valor);
+                } else {
+                    double somaAtual = totais.get(pos);
+                    totais.set(pos, somaAtual + valor);
+                }
+            }
+
+            i = i + 1;
+        }
+
+        if (categorias.size() == 0) {
+            System.out.println("Não há despesas para mostrar.");
+            return;
+        }
+
+        System.out.println("\nCategoria | Total gasto");
+        System.out.println("-----------------------");
+
+        i = 0;
+        while (i < categorias.size()) {
+            System.out.println(categorias.get(i) + " | R$ " + totais.get(i));
+            i = i + 1;
+        }
+    }
+
+    // 2) Ranking de maiores despesas
+    private void relatorioRankingDespesas() {
+        System.out.println("\n=== Relatório: Ranking de Maiores Despesas ===");
+
+        ArrayList<Lancamento> despesas = new ArrayList<Lancamento>();
+
+        int i = 0;
+        while (i < lancamentos.size()) {
+            Lancamento l = lancamentos.get(i);
+            if (l.getTipo() == 2) { // 2 = despesa
+                despesas.add(l);
+            }
+            i = i + 1;
+        }
+
+        if (despesas.size() == 0) {
+            System.out.println("Nenhuma despesa registrada.");
+            return;
+        }
+
+        // Ordenação simples (Selection Sort) por valor decrescente
+        int n = despesas.size();
+        int pos = 0;
+        while (pos < n - 1) {
+            int indiceMaior = pos;
+
+            int j = pos + 1;
+            while (j < n) {
+                if (despesas.get(j).getValor() > despesas.get(indiceMaior).getValor()) {
+                    indiceMaior = j;
+                }
+                j = j + 1;
+            }
+
+            if (indiceMaior != pos) {
+                Lancamento temp = despesas.get(pos);
+                despesas.set(pos, despesas.get(indiceMaior));
+                despesas.set(indiceMaior, temp);
+            }
+
+            pos = pos + 1;
+        }
+
+        // Mostrar apenas as top 5 (ou menos se não tiver)
+        int limite = 5;
+        if (despesas.size() < 5) {
+            limite = despesas.size();
+        }
+
+        System.out.println("Top " + limite + " maiores despesas:");
+        int k = 0;
+        while (k < limite) {
+            Lancamento l = despesas.get(k);
+            System.out.println((k + 1) + "º - ID " + l.getId() +
+                    " | Categoria: " + l.getCategoria() +
+                    " / " + l.getSubcategoria() +
+                    " | Valor: R$ " + l.getValor() +
+                    " | Data: " + l.getData());
+            k = k + 1;
+        }
+    }
+
+    // 3) Resumo por usuário/grupo
+    private void relatorioResumoPorUsuario() {
+        System.out.println("\n=== Relatório: Resumo por Usuário/Grupo ===");
+
+        if (usuarios.size() == 0) {
+            System.out.println("Nenhum usuário cadastrado.");
+            return;
+        }
+
+        int i = 0;
+        while (i < usuarios.size()) {
+            Usuario u = usuarios.get(i);
+
+            double totalPagou = 0.0;
+            double totalRecebeu = 0.0;
+
+            int j = 0;
+            while (j < lancamentos.size()) {
+                Lancamento l = lancamentos.get(j);
+
+                Usuario pag = l.getPagador();
+                if (pag != null && pag.getId() == u.getId()) {
+                    totalPagou = totalPagou + l.getValor();
+                }
+
+                Usuario ben = l.getBeneficiario();
+                if (ben != null && ben.getId() == u.getId()) {
+                    totalRecebeu = totalRecebeu + l.getValor();
+                }
+
+                j = j + 1;
+            }
+
+            System.out.println("Usuário/Grupo: " + u.getNome() + " (ID: " + u.getId() + ")");
+            System.out.println("  Total pago: R$ " + totalPagou);
+            System.out.println("  Total recebido: R$ " + totalRecebeu);
+            System.out.println("--------------------------");
+
+            i = i + 1;
+        }
     }
 }

@@ -6,17 +6,19 @@ import ContasCarteiras.ContaFinanceira;
 public class Lancamento {
 
     private int id;
-    private int tipo; // 1 = receita, 2 = despesa, 3 = transferência
+    private int tipo;          // 1 = receita, 2 = despesa, 3 = transferência
     private double valor;
     private String categoria;
     private String subcategoria;
     private String data;       
-    private int recorrencia;   
+    private int recorrencia;   // 0 = nenhuma, 1 = mensal, 2 = anual
     private Usuario pagador;
     private Usuario beneficiario;
     private String anexo;
     private ContaFinanceira contaOrigem;
     private ContaFinanceira contaDestino;
+    private int numeroParcela;
+    private int totalParcelas;
     private boolean estornado;
 
     public Lancamento(
@@ -45,6 +47,8 @@ public class Lancamento {
         this.anexo = anexo;
         this.contaOrigem = contaOrigem;
         this.contaDestino = contaDestino;
+        this.numeroParcela = 1;
+        this.totalParcelas = 1;
         this.estornado = false;
     }
 
@@ -146,9 +150,31 @@ public class Lancamento {
         this.contaDestino = contaDestino;
     }
 
+    public int getNumeroParcela() {
+        return numeroParcela;
+    }
+
+    public void setNumeroParcela(int numeroParcela) {
+        this.numeroParcela = numeroParcela;
+    }
+
+    public int getTotalParcelas() {
+        return totalParcelas;
+    }
+
+    public void setTotalParcelas(int totalParcelas) {
+        this.totalParcelas = totalParcelas;
+    }
+
     public boolean isEstornado() {
         return estornado;
     }
+
+    public void setEstornado(boolean estornado) {
+        this.estornado = estornado;
+    }
+
+    // métodos de apoio
 
     private String getTipoComoTexto() {
         if (tipo == 1) {
@@ -174,6 +200,14 @@ public class Lancamento {
         }
     }
 
+    public boolean ehRecorrente() {
+        return recorrencia != 0;
+    }
+
+    public boolean ehParcelado() {
+        return totalParcelas > 1;
+    }
+
     // exibir infos
     public void exibir() {
         System.out.println("ID do lançamento: " + id);
@@ -182,36 +216,55 @@ public class Lancamento {
         System.out.println("Categoria: " + categoria + " / " + subcategoria);
         System.out.println("Data: " + data);
         System.out.println("Recorrência: " + getRecorrenciaComoTexto());
+
+        if (ehParcelado()) {
+            System.out.println("Parcela: " + numeroParcela + " de " + totalParcelas);
+        } else {
+            System.out.println("Parcela: única");
+        }
+
         System.out.println("Pagador: " + (pagador != null ? pagador.getNome() : "N/A"));
         System.out.println("Beneficiário: " + (beneficiario != null ? beneficiario.getNome() : "N/A"));
         System.out.println("Anexo (simulado): " + (anexo != null ? anexo : "nenhum"));
+
         System.out.println("Conta origem: " +
                 (contaOrigem != null ? contaOrigem.getNome() : "nenhuma"));
         System.out.println("Conta destino: " +
                 (contaDestino != null ? contaDestino.getNome() : "nenhuma"));
-        System.out.println("Estornado: " + (estornado ? "Sim" : "Não"));
+
+        System.out.println("Estornado: " + (estornado ? "SIM" : "NÃO"));
         System.out.println("--------------------------");
     }
 
     // Aplica o lançamento nas contas
     public void aplicar() {
+        if (estornado) {
+            System.out.println("Lançamento " + id + " já foi estornado. Não será aplicado novamente.");
+            return;
+        }
+
         if (contaOrigem == null && contaDestino == null) {
             System.out.println("Nenhuma conta associada ao lançamento " + id);
             return;
         }
 
         if (tipo == 1) {
-            // receita
+            // RECEITA: entra dinheiro na conta de origem
             if (contaOrigem != null) {
                 contaOrigem.depositar(valor);
+            } else {
+                System.out.println("Receita sem conta de origem para receber o valor.");
             }
         } else if (tipo == 2) {
-            // despesa
+            // DESPESA: sai dinheiro da conta de origem
             if (contaOrigem != null) {
+                // Validação de saldo é feita dentro de sacar()
                 contaOrigem.sacar(valor);
+            } else {
+                System.out.println("Despesa sem conta de origem para pagar.");
             }
         } else if (tipo == 3) {
-            // transferencia
+            // TRANSFERÊNCIA: sai da origem e entra na destino
             if (contaOrigem != null && contaDestino != null) {
                 contaOrigem.sacar(valor);
                 contaDestino.depositar(valor);
@@ -223,107 +276,49 @@ public class Lancamento {
         }
     }
 
-    // regra de estorno
+    // Estorna o lançamento
     public void estornar() {
         if (estornado) {
-            System.out.println("Lançamento " + id + " já foi estornado.");
+            System.out.println("Lançamento " + id + " já está estornado.");
             return;
         }
 
         if (contaOrigem == null && contaDestino == null) {
-            System.out.println("Não é possível estornar o lançamento " + id + " (sem contas associadas).");
+            System.out.println("Nenhuma conta associada ao lançamento " + id + " para estornar.");
             return;
         }
 
-        // Desfaz o aplicar
+        System.out.println("Estornando lançamento ID " + id + "...");
+
         if (tipo == 1) {
-            // Receita
+            // Estorno de RECEITA: retirar o valor da conta de origem
             if (contaOrigem != null) {
                 contaOrigem.sacar(valor);
+            } else {
+                System.out.println("Não há conta de origem para estornar esta receita.");
             }
         } else if (tipo == 2) {
-            // Despesa
+            // Estorno de DESPESA: devolver o valor para a conta de origem
             if (contaOrigem != null) {
                 contaOrigem.depositar(valor);
+            } else {
+                System.out.println("Não há conta de origem para estornar esta despesa.");
             }
         } else if (tipo == 3) {
-            // Transferência
+            // Estorno de transferencia
             if (contaOrigem != null && contaDestino != null) {
                 contaDestino.sacar(valor);
                 contaOrigem.depositar(valor);
+            } else {
+                System.out.println("Transferência sem contas de origem e destino para estornar.");
             }
+        } else {
+            System.out.println("Tipo de lançamento inválido para estorno: " + tipo);
         }
 
         estornado = true;
-        System.out.println("Lançamento " + id + " estornado com sucesso.");
-    }
-    // regra parcelamento
-    public void mostrarParcelas(int quantidadeParcelas) {
-        if (quantidadeParcelas <= 1) {
-            System.out.println("A quantidade de parcelas deve ser maior que 1.");
-            return;
-        }
 
-        double valorParcela = valor / quantidadeParcelas;
-
-        System.out.println("Parcelamento do lançamento " + id + " em " + quantidadeParcelas + " vezes:");
-        int i = 1;
-        while (i <= quantidadeParcelas) {
-            System.out.println("Parcela " + i + ": R$ " + valorParcela);
-            i = i + 1;
-        }
-        System.out.println("--------------------------");
-    }
-
-    // regra lançamento recorrente
-    public Lancamento gerarProximoLancamento(int novoId, String novaData) {
-        if (recorrencia == 0) {
-            System.out.println("Lançamento " + id + " não é recorrente.");
-            return null;
-        }
-
-        Lancamento proximo = new Lancamento(
-                novoId,
-                this.tipo,
-                this.valor,
-                this.categoria,
-                this.subcategoria,
-                novaData,  
-                this.recorrencia,
-                this.pagador,
-                this.beneficiario,
-                this.anexo,
-                this.contaOrigem,
-                this.contaDestino
-        );
-
-        return proximo;
-    }
-
-    // regra alerta de limite
-    public void verificarLimiteSimples(double limite) {
-        if (tipo == 2 && valor > limite) {
-            System.out.println("ALERTA: Despesa do lançamento " + id +
-                    " (R$ " + valor + ") ultrapassa o limite de R$ " + limite +
-                    " na categoria " + categoria + ".");
-        }
-    }
-    // regra rateio
-    public void mostrarRateioSimples(int quantidadePessoas) {
-        if (quantidadePessoas <= 0) {
-            System.out.println("Quantidade de pessoas deve ser maior que zero.");
-            return;
-        }
-
-        if (tipo != 2) {
-            System.out.println("Rateio simples só faz sentido para despesas (tipo 2).");
-            return;
-        }
-
-        double valorPorPessoa = valor / quantidadePessoas;
-
-        System.out.println("Rateio do lançamento " + id + " entre " + quantidadePessoas + " pessoas:");
-        System.out.println("Cada pessoa deve: R$ " + valorPorPessoa);
+        System.out.println("Estorno concluído para o lançamento ID " + id + ".");
         System.out.println("--------------------------");
     }
 }
