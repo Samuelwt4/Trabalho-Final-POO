@@ -1,4 +1,4 @@
-package usuarios;
+package Usuarios;
 
 public abstract class Usuario {
 

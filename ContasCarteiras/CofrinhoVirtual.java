@@ -1,5 +1,5 @@
 package ContasCarteiras;
-import usuarios.Usuario;
+import Usuarios.Usuario;
 
 public class CofrinhoVirtual extends ContaFinanceira {
 

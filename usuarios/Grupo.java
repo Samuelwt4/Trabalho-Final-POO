@@ -1,4 +1,4 @@
-package usuarios;
+package Usuarios;
 
 import java.util.ArrayList;
 

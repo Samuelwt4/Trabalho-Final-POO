@@ -1,4 +1,4 @@
-package usuarios;
+package Usuarios;
 
 public class UsuarioIndividual extends Usuario {
     private String cpf;
