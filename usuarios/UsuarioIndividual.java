@@ -1,3 +1,5 @@
+package usuarios;
+
 public class UsuarioIndividual extends Usuario {
     private String cpf;
 
