@@ -9,10 +9,10 @@ import ContasCarteiras.ContaDigital;
 import ContasCarteiras.CartaoCredito;
 import ContasCarteiras.CarteiraInvestimento;
 import ContasCarteiras.CofrinhoVirtual;
+import ContasCarteiras.FabricaContas;
 import Lancamentos.Lancamento;
 import MetasOrcamentos.MetaCategoria;
-import Algoritmos.AlgoritmosFinanceiros; 
-
+import Algoritmos.AlgoritmosFinanceiros;
 public class SistemaFinanceiro {
 
     private ArrayList<Usuario> usuarios = new ArrayList<Usuario>();
@@ -236,27 +236,24 @@ public class SistemaFinanceiro {
         System.out.print("Escolha o tipo: ");
         int tipo = Integer.parseInt(entrada.nextLine());
 
-        ContaFinanceira conta = null;
+        double valor = 0.0;
 
         if (tipo == 1 || tipo == 2 || tipo == 4 || tipo == 5) {
             System.out.print("Saldo inicial: ");
-            double saldoInicial = Double.parseDouble(entrada.nextLine());
-
-            if (tipo == 1) {
-                conta = new ContaCorrente(idConta, nomeConta, dono, saldoInicial);
-            } else if (tipo == 2) {
-                conta = new ContaDigital(idConta, nomeConta, dono, saldoInicial);
-            } else if (tipo == 4) {
-                conta = new CarteiraInvestimento(idConta, nomeConta, dono, saldoInicial);
-            } else if (tipo == 5) {
-                conta = new CofrinhoVirtual(idConta, nomeConta, dono, saldoInicial);
-            }
+            valor = Double.parseDouble(entrada.nextLine());
         } else if (tipo == 3) {
             System.out.print("Limite do cartão: ");
-            double limite = Double.parseDouble(entrada.nextLine());
-            conta = new CartaoCredito(idConta, nomeConta, dono, limite);
+            valor = Double.parseDouble(entrada.nextLine());
         } else {
             System.out.println("Tipo de conta inválido.");
+            return;
+        }
+
+        // Uso da FACTORY para criar a conta
+        ContaFinanceira conta = FabricaContas.criarConta(tipo, idConta, nomeConta, dono, valor);
+
+        if (conta == null) {
+            System.out.println("Não foi possível criar a conta. Tipo inválido.");
             return;
         }
 
@@ -917,7 +914,6 @@ public class SistemaFinanceiro {
                 int pos = -1;
                 int j = 0;
                 while (j < categorias.size()) {
-                    // aqui usamos equals apenas para comparar textos de categoria
                     if (categorias.get(j).equals(cat)) {
                         pos = j;
                         j = categorias.size(); // para sair do while

@@ -1,4 +1,7 @@
 package ContasCarteiras;
+
+import Exceptions.SaldoInsuficienteException;
+import Exceptions.ValorInvalidoException;
 import Usuarios.Usuario;
 
 public abstract class ContaFinanceira {
@@ -7,13 +10,14 @@ public abstract class ContaFinanceira {
     private Usuario dono;
     protected double saldo;
 
-    public ContaFinanceira(int id, String nome, Usuario dono, double saldoInicial){
+    public ContaFinanceira(int id, String nome, Usuario dono, double saldoInicial) {
         this.id = id;
         this.nome = nome;
         this.dono = dono;
         this.saldo = saldoInicial;
     }
-     public int getId() {
+
+    public int getId() {
         return id;
     }
 
@@ -40,31 +44,30 @@ public abstract class ContaFinanceira {
     public double getSaldo() {
         return saldo;
     }
-        // sem setSaldo pra não deixar mudar direto
 
-    // depósito
-    public void depositar(double valor) {
+    // sem setSaldo para não deixar mudar diretamente
+
+    // Método de depósito com validação
+    public void depositar(double valor) throws ValorInvalidoException {
         if (valor <= 0) {
-            System.out.println("Valor de depósito inválido!");
-        } else {
-            saldo += valor;
+            throw new ValorInvalidoException("Valor de depósito inválido! O valor deve ser maior que zero.");
         }
+        saldo += valor;
     }
 
-     // saque
-    public void sacar(double valor) {
+    // Método de saque com validação
+    public void sacar(double valor) throws SaldoInsuficienteException, ValorInvalidoException {
         if (valor <= 0) {
-            System.out.println("Valor de saque inválido!");
+            throw new ValorInvalidoException("Valor de saque inválido! O valor deve ser maior que zero.");
         } else if (valor > saldo) {
-            System.out.println("Saldo insuficiente para saque!");
-        } else {
-            saldo -= valor;
+            throw new SaldoInsuficienteException("Saldo insuficiente para realizar o saque.");
         }
+        saldo -= valor;
     }
 
     public abstract String getTipoConta();
 
-    // exibir infos
+    // Exibir informações da conta
     public void exibir() {
         System.out.println("ID da conta: " + id);
         System.out.println("Nome da conta: " + nome);

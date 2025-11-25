@@ -1,5 +1,7 @@
 package Lancamentos;
 
+import Exceptions.SaldoInsuficienteException;
+import Exceptions.ValorInvalidoException;
 import Usuarios.Usuario;
 import ContasCarteiras.ContaFinanceira;
 
@@ -53,7 +55,6 @@ public class Lancamento {
     }
 
     // get e set
-
     public int getId() {
         return id;
     }
@@ -248,31 +249,35 @@ public class Lancamento {
             return;
         }
 
-        if (tipo == 1) {
-            // RECEITA: entra dinheiro na conta de origem
-            if (contaOrigem != null) {
-                contaOrigem.depositar(valor);
+        try {
+            if (tipo == 1) {
+                // RECEITA: entra dinheiro na conta de origem
+                if (contaOrigem != null) {
+                    contaOrigem.depositar(valor);
+                } else {
+                    System.out.println("Receita sem conta de origem para receber o valor.");
+                }
+            } else if (tipo == 2) {
+                // DESPESA: sai dinheiro da conta de origem
+                if (contaOrigem != null) {
+                    // Validação de saldo é feita dentro de sacar()
+                    contaOrigem.sacar(valor);
+                } else {
+                    System.out.println("Despesa sem conta de origem para pagar.");
+                }
+            } else if (tipo == 3) {
+                // TRANSFERÊNCIA: sai da origem e entra na destino
+                if (contaOrigem != null && contaDestino != null) {
+                    contaOrigem.sacar(valor);
+                    contaDestino.depositar(valor);
+                } else {
+                    System.out.println("Transferência precisa de conta de origem e destino.");
+                }
             } else {
-                System.out.println("Receita sem conta de origem para receber o valor.");
+                System.out.println("Tipo de lançamento inválido: " + tipo);
             }
-        } else if (tipo == 2) {
-            // DESPESA: sai dinheiro da conta de origem
-            if (contaOrigem != null) {
-                // Validação de saldo é feita dentro de sacar()
-                contaOrigem.sacar(valor);
-            } else {
-                System.out.println("Despesa sem conta de origem para pagar.");
-            }
-        } else if (tipo == 3) {
-            // TRANSFERÊNCIA: sai da origem e entra na destino
-            if (contaOrigem != null && contaDestino != null) {
-                contaOrigem.sacar(valor);
-                contaDestino.depositar(valor);
-            } else {
-                System.out.println("Transferência precisa de conta de origem e destino.");
-            }
-        } else {
-            System.out.println("Tipo de lançamento inválido: " + tipo);
+        } catch (ValorInvalidoException | SaldoInsuficienteException e) {
+            System.out.println("Erro: " + e.getMessage());
         }
     }
 
@@ -290,30 +295,34 @@ public class Lancamento {
 
         System.out.println("Estornando lançamento ID " + id + "...");
 
-        if (tipo == 1) {
-            // Estorno de RECEITA: retirar o valor da conta de origem
-            if (contaOrigem != null) {
-                contaOrigem.sacar(valor);
+        try {
+            if (tipo == 1) {
+                // Estorno de RECEITA: retirar o valor da conta de origem
+                if (contaOrigem != null) {
+                    contaOrigem.sacar(valor);
+                } else {
+                    System.out.println("Não há conta de origem para estornar esta receita.");
+                }
+            } else if (tipo == 2) {
+                // Estorno de DESPESA: devolver o valor para a conta de origem
+                if (contaOrigem != null) {
+                    contaOrigem.depositar(valor);
+                } else {
+                    System.out.println("Não há conta de origem para estornar esta despesa.");
+                }
+            } else if (tipo == 3) {
+                // Estorno de transferência
+                if (contaOrigem != null && contaDestino != null) {
+                    contaDestino.sacar(valor);
+                    contaOrigem.depositar(valor);
+                } else {
+                    System.out.println("Transferência sem contas de origem e destino para estornar.");
+                }
             } else {
-                System.out.println("Não há conta de origem para estornar esta receita.");
+                System.out.println("Tipo de lançamento inválido para estorno: " + tipo);
             }
-        } else if (tipo == 2) {
-            // Estorno de DESPESA: devolver o valor para a conta de origem
-            if (contaOrigem != null) {
-                contaOrigem.depositar(valor);
-            } else {
-                System.out.println("Não há conta de origem para estornar esta despesa.");
-            }
-        } else if (tipo == 3) {
-            // Estorno de transferencia
-            if (contaOrigem != null && contaDestino != null) {
-                contaDestino.sacar(valor);
-                contaOrigem.depositar(valor);
-            } else {
-                System.out.println("Transferência sem contas de origem e destino para estornar.");
-            }
-        } else {
-            System.out.println("Tipo de lançamento inválido para estorno: " + tipo);
+        } catch (SaldoInsuficienteException | ValorInvalidoException e) {
+            System.out.println("Erro no estorno: " + e.getMessage());
         }
 
         estornado = true;
